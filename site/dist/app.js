@@ -1,5 +1,5 @@
 const paths={
- root:{title:'What would you like to say?',hint:'Choose a sentence starter.',options:[['I need','needs','🤲'],['I feel','feelings','💛'],['I want','wants','🤔'],['I am','states','👋'],['Please','please','🙏'],['Talk about…','topics','💬']]},
+ root:{title:'What would you like to say?',hint:'Choose a sentence starter.',options:[['I need','needs','🙋'],['I feel','feelings','💛'],['I want','wants','🤔'],['I am','states','👋'],['Please','please','🙏'],['Talk about…','topics','💬']]},
  needs:{title:'What do you need?',options:[['a drink','drink','🥤'],['food','food','🍲'],['the toilet','finish','🚻'],['help','help','🤝'],['my medicine','finish','💊'],['to rest','finish','🛏️']]},
  feelings:{title:'How do you feel?',options:[['happy','finish','😊'],['sad','finish','😔'],['worried','finish','😟'],['angry','finish','😠'],['tired','finish','😴'],['in pain','pain','🩹']]},
  wants:{title:'What do you want?',options:[['to eat','food','🍲'],['to drink','drink','🥤'],['to go','places','📍'],['to see','people','👥'],['to stop','finish','✋'],['to continue','finish','▶']]},
