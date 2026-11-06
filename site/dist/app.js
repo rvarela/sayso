@@ -16,13 +16,13 @@ const paths={
  finish:{title:'Your message is ready',hint:'You can speak it, change a part, or add another thought.',options:[['Add another thought','root','＋']]}
 };
 const labels={people:'People',food:'Food & drink',places:'Places',needs:'Needs'};
-let state={node:'root',trail:[],mode:localStorage.getItem('sayso-mode')||'words',custom:JSON.parse(localStorage.getItem('sayso-custom')||'[]'),usage:JSON.parse(localStorage.getItem('sayso-usage')||'{}')};
+let state={node:'root',trail:[],mode:localStorage.getItem('sayso-mode')||'visual',custom:JSON.parse(localStorage.getItem('sayso-custom')||'[]'),usage:JSON.parse(localStorage.getItem('sayso-usage')||'{}')};
 const $=s=>document.querySelector(s);
 function speak(text){if(!('speechSynthesis'in window))return; speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(text);u.rate=.88;u.pitch=1; speechSynthesis.speak(u)}
 function optionsFor(node){let opts=[...(paths[node].options||[])];state.custom.filter(x=>x.category===node).forEach(x=>opts.push([x.text,'finish','⭐']));return opts.sort((a,b)=>(state.usage[b[0]]||0)-(state.usage[a[0]]||0))}
 function render(){const data=paths[state.node];$('#screenTitle').textContent=data.title;$('#screenHint').textContent=data.hint||'Tap an option. It will be spoken and added to your message.';$('#eyebrow').textContent=state.node==='root'?'Let’s find the words':'Keep going';
  const composer=$('#composer');composer.classList.toggle('hidden',!state.trail.length);$('#speakSentence').classList.toggle('hidden',!state.trail.length);$('#sentenceCrumbs').innerHTML=state.trail.map((x,i)=>`<button class="crumb" data-crumb="${i}" title="Change from ${x.text}">${x.text}</button>`).join('');
- const list=optionsFor(state.node);$('#optionList').innerHTML=list.map((o,i)=>`<button class="option-card" role="listitem" data-option="${i}"><span class="option-icon">${state.mode==='visual'?o[2]:'›'}</span><span class="option-text">${o[0]}</span><span class="option-arrow">›</span></button>`).join('');
+ const list=optionsFor(state.node);$('#optionList').innerHTML=list.map((o,i)=>`<button class="option-card" role="listitem" data-option="${i}">${state.mode==='visual'?`<span class="option-icon">${o[2]}</span>`:''}<span class="option-text">${o[0]}</span><span class="option-arrow">›</span></button>`).join('');
  document.querySelectorAll('.switch-button').forEach(b=>{const on=b.dataset.mode===state.mode;b.classList.toggle('active',on);b.setAttribute('aria-pressed',on)});}
 function choose(index){const data=paths[state.node],o=optionsFor(state.node)[index];if(!o)return;speak(o[0]);state.usage[o[0]]=(state.usage[o[0]]||0)+1;localStorage.setItem('sayso-usage',JSON.stringify(state.usage));if(data.add!==false&&o[0]!=='Add another thought')state.trail.push({text:o[0],node:state.node});state.node=o[1];render()}
 function showSettings(show){$('#patientView').classList.toggle('hidden',show);$('#settingsView').classList.toggle('hidden',!show);document.querySelector('.view-switch').classList.toggle('hidden',show);renderCustom();scrollTo(0,0)}
