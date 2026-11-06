@@ -76,6 +76,11 @@ For updates on the VPS, either copy `site/dist` again or clone/pull the reposito
 
 SaySo is a communication aid, not a medical device. It should not replace professional medical advice or emergency communication systems.
 
+## Project documentation
+
+- [Product and deployment notes](NOTES.md)
+- [Backlog](BACKLOG.md)
+
 ## License
 
 [MIT](LICENSE) — use, modify, and share it freely.
