@@ -4,4 +4,5 @@
 .setting-help{color:var(--muted);font-size:14px;line-height:1.45;margin:7px 0 17px}
 .custom-group{margin-top:18px}.custom-group:first-child{margin-top:0}.custom-group h3{color:var(--sage);font-size:12px;letter-spacing:.1em;text-transform:uppercase;margin:0 0 5px}.custom-group+.custom-group{border-top:1px solid var(--line);padding-top:18px}.custom-group .custom-item:first-of-type{border-top:0}
 .composer-actions{flex-wrap:wrap}.composer-actions .secondary-button{flex-shrink:0;white-space:nowrap;line-height:1.2}
+.icon-button{display:grid;place-items:center;padding:0}.tabler-icon{display:block;width:22px;height:22px}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
