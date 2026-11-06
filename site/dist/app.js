@@ -15,7 +15,7 @@ const paths={
  places:{title:'Where?',options:[['home','finish','🏠'],['outside','finish','🌿'],['the bathroom','finish','🚻'],['my room','finish','🛏️'],['the hospital','finish','🏥']]},
  finish:{title:'Your message is ready',hint:'You can speak it, change a part, or add another thought.',options:[['Add another thought','root','＋']]}
 };
-const labels={people:'People',food:'Food & drink',places:'Places',needs:'Needs',feelings:'I feel…',states:'I am…'};
+const labels={needs:'I need…',feelings:'I feel…',wants:'I want…',states:'I am…',please:'Please…',people:'People',food:'Food & drink',places:'Places'};
 let state={node:'root',trail:[],mode:localStorage.getItem('sayso-mode')||'visual',voice:localStorage.getItem('sayso-voice')||'',custom:JSON.parse(localStorage.getItem('sayso-custom')||'[]'),usage:JSON.parse(localStorage.getItem('sayso-usage')||'{}')};
 const $=s=>document.querySelector(s);
 let availableVoices=[];
