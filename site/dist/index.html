@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f7f2e8">
+  <title>SaySo — communication made easier</title>
+  <meta name="description" content="A gentle, guided communication aid for people with aphasia and speech difficulties.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main id="app" class="app-shell">
+    <header class="topbar">
+      <button class="brand" data-action="home" aria-label="Return home"><span class="brand-mark">S</span><span>SaySo</span></button>
+      <div class="view-switch" role="group" aria-label="Display style">
+        <button class="switch-button active" data-mode="words" aria-pressed="true">Aa <span>Words</span></button>
+        <button class="switch-button" data-mode="visual" aria-pressed="false">◉ <span>Visual</span></button>
+      </div>
+      <button class="icon-button" data-action="settings" aria-label="Caregiver settings">⚙</button>
+    </header>
+
+    <section id="patientView" class="view patient-view">
+      <div id="composer" class="composer hidden" aria-live="polite">
+        <div class="composer-label">Your message</div>
+        <div id="sentenceCrumbs" class="crumbs"></div>
+        <div class="composer-actions">
+          <button class="secondary-button" data-action="undo">↶ Undo</button>
+          <button class="secondary-button" data-action="clear">Clear</button>
+          <button id="speakSentence" class="speak-button hidden" data-action="speak-sentence">▶ Speak</button>
+        </div>
+      </div>
+
+      <div class="prompt-block">
+        <p id="eyebrow" class="eyebrow">Let’s find the words</p>
+        <h1 id="screenTitle">What would you like to say?</h1>
+        <p id="screenHint">Tap an option. It will be spoken and added to your message.</p>
+      </div>
+
+      <div id="optionList" class="option-list" role="list"></div>
+      <div id="pager" class="pager hidden"></div>
+    </section>
+
+    <section id="settingsView" class="view settings-view hidden">
+      <div class="settings-heading">
+        <button class="back-button" data-action="close-settings">← Back to communicator</button>
+        <p class="eyebrow">Caregiver space</p>
+        <h1>Make SaySo familiar</h1>
+        <p>Add the people, foods and places that matter. Changes stay on this device.</p>
+      </div>
+
+      <div class="settings-card">
+        <label for="categorySelect">Add to</label>
+        <select id="categorySelect"><option value="people">People</option><option value="food">Food & drink</option><option value="places">Places</option><option value="needs">Needs</option></select>
+        <label for="customLabel">Word or short phrase</label>
+        <div class="input-row"><input id="customLabel" maxlength="40" placeholder="e.g. Maria"><button class="add-button" data-action="add-custom">Add</button></div>
+        <p id="formStatus" class="form-status" aria-live="polite"></p>
+      </div>
+
+      <div class="settings-card">
+        <div class="card-title-row"><h2>Personal vocabulary</h2><span id="customCount" class="count-badge">0</span></div>
+        <div id="customItems" class="custom-items"><p class="empty-state">No personal words added yet.</p></div>
+      </div>
+
+      <div class="settings-card compact">
+        <div><h2>Suggestion learning</h2><p>Frequently chosen options move higher in the list.</p></div>
+        <button class="text-button" data-action="reset-learning">Reset</button>
+      </div>
+    </section>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
