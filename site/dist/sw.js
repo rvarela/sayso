@@ -1,4 +1,4 @@
-const cacheName = 'trasay-offline-v1';
+const cacheName = 'trasay-offline-v2';
 const home = new URL('./', self.registration.scope).href;
 const assets = ['app.js', 'styles.css', 'assets/sayso-mark.png', 'assets/apple-touch-icon.png'];
 
@@ -15,6 +15,7 @@ self.addEventListener('install', event => {
     const cache = await caches.open(cacheName);
     await cache.addAll(shell);
     await cache.put(home, response);
+    await self.skipWaiting();
   })());
 });
 
@@ -37,12 +38,23 @@ self.addEventListener('fetch', event => {
 
   event.respondWith((async () => {
     const cache = await caches.open(cacheName);
+    const key = isHome ? home : request;
+    const saved = await cache.match(key);
+    // Versioned assets can be served immediately once downloaded.
+    if (!isHome && saved) return saved;
+    const controller = new AbortController();
+    const timeout = saved ? setTimeout(() => controller.abort(), 1200) : null;
     try {
-      const response = await fetch(request);
-      if (response.ok) await cache.put(isHome ? home : request, response.clone());
-      return response;
+      const response = await fetch(request, {signal: controller.signal});
+      if (response.ok) {
+        await cache.put(key, response.clone());
+        return response;
+      }
+      return saved || response;
     } catch {
-      return await cache.match(isHome ? home : request) || Response.error();
+      return saved || Response.error();
+    } finally {
+      clearTimeout(timeout);
     }
   })());
 });
