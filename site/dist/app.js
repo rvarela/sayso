@@ -22,6 +22,16 @@ const quickSentences=['Yes.', 'No.', 'I need my caregiver.', 'I am in severe pai
 const customQuick=JSON.parse(localStorage.getItem('sayso-quick')||'[]');
 const favourites=JSON.parse(localStorage.getItem('sayso-favourites')||'[]');
 const allQuick=()=>[...quickSentences,...favourites,...customQuick];
+let quickOrder=JSON.parse(localStorage.getItem('sayso-quick-order')||'[]');
+const saveQuickOrder=()=>localStorage.setItem('sayso-quick-order',JSON.stringify(quickOrder));
+function removeFromQuickOrder(index){
+ quickOrder=quickOrder.filter(i=>i!==index).map(i=>i>index?i-1:i);
+ saveQuickOrder();
+}
+function insertIntoQuickOrder(index){
+ quickOrder=quickOrder.map(i=>i>=index?i+1:i);
+ saveQuickOrder();
+}
 const escapeHtml=text=>text.replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const message=()=>state.trail.map(part=>part.text).join(' ').replace(/ \./g,'.');
 const complete=()=>state.trail.length>0 && ['finish','root','drink','food','help','severity','topics'].includes(state.node);
@@ -54,7 +64,10 @@ function showQuick(show){
  $('#quickView').classList.toggle('hidden',!show);
  $('[data-action="builder"]').setAttribute('aria-pressed',!show);
  $('[data-action="quick"]').setAttribute('aria-pressed',show);
- $('#quickView').innerHTML=allQuick().map((entry,i)=>{
+ const entries=allQuick();
+ quickOrder=[...new Set([...quickOrder,...entries.keys()])].filter(i=>i>=0&&i<entries.length);
+ $('#quickView').innerHTML=quickOrder.map(i=>{
+  const entry=entries[i];
   const {text,emoji}=typeof entry==='string'?{text:entry}:entry;
   const icon=emoji?`<span class="option-icon" aria-hidden="true">${escapeHtml(emoji)}</span>`:'';
   const card=`<button class="option-card" data-quick="${i}">${icon}<span class="option-text">${escapeHtml(text)}</span></button>`;
@@ -71,12 +84,60 @@ function revealQuickAction(row, open){
 }
 
 let quickSwipe;
+let drag;
+function endDrag(){
+ if(!drag)return;
+ clearTimeout(drag.timer);
+ drag.card.classList.remove('quick-dragging');
+ drag.card.style.removeProperty('--drag-y');
+}
 $('#quickView').addEventListener('pointerdown',event=>{
+ if(!event.isPrimary||event.button!==0)return;
  const row=event.target.closest('.quick-row');
  quickSwipe=row&&{row,x:event.clientX,y:event.clientY};
+ const card=event.target.closest('[data-quick]');
+ if(!card)return;
+ drag={card,x:event.clientX,y:event.clientY,active:false};
+ drag.timer=setTimeout(()=>{
+  drag.active=true;
+  quickSwipe=null;
+  card.setPointerCapture(event.pointerId);
+  card.classList.add('quick-dragging');
+ },350);
 });
-$('#quickView').addEventListener('pointercancel',()=>{quickSwipe=null});
+$('#quickView').addEventListener('pointermove',event=>{
+ if(!drag)return;
+ const dy=event.clientY-drag.y;
+ if(drag.active)drag.card.style.setProperty('--drag-y',dy+'px');
+ else if(Math.hypot(event.clientX-drag.x,dy)>10){endDrag();drag=null;}
+});
+$('#quickView').addEventListener('touchmove',event=>{
+ if(drag?.active&&event.cancelable)event.preventDefault();
+},{passive:false});
+$('#quickView').addEventListener('pointerleave',()=>{
+ if(!drag?.active){endDrag();drag=null;quickSwipe=null;}
+});
+$('#quickView').addEventListener('contextmenu',event=>{
+ if(event.target.closest('[data-quick]'))event.preventDefault();
+});
+$('#quickView').addEventListener('pointercancel',()=>{quickSwipe=null;endDrag();drag=null});
 $('#quickView').addEventListener('pointerup',event=>{
+ if(drag?.active){
+  const from=Number(drag.card.dataset.quick);
+  const to=document.elementFromPoint(event.clientX,event.clientY)?.closest('[data-quick]')?.dataset.quick;
+  endDrag();
+  drag=null;
+  if(to!=null&&Number(to)!==from){
+   const position=quickOrder.indexOf(Number(to));
+   quickOrder.splice(quickOrder.indexOf(from),1);
+   quickOrder.splice(position,0,from);
+   saveQuickOrder();
+  }
+  showQuick(true);
+  return;
+ }
+ endDrag();
+ drag=null;
  if(!quickSwipe)return;
  const {row,x,y}=quickSwipe;
  quickSwipe=null;
@@ -159,6 +220,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)r
   const isFavourite=index<favourites.length;
   const list=isFavourite?favourites:customQuick;
   list.splice(isFavourite?index:index-favourites.length,1);
+  removeFromQuickOrder(Number(b.dataset.removeQuick));
   localStorage.setItem(isFavourite?'sayso-favourites':'sayso-quick',JSON.stringify(list));
   render();
   showQuick(true);
@@ -186,8 +248,13 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)r
  if(b.dataset.action==='favourite'){
   if(!complete())return;
   const index=favourites.indexOf(message());
-  if(index<0)favourites.push(message());
-  else favourites.splice(index,1);
+  if(index<0){
+   insertIntoQuickOrder(quickSentences.length+favourites.length);
+   favourites.push(message());
+  }else{
+   favourites.splice(index,1);
+   removeFromQuickOrder(quickSentences.length+index);
+  }
   localStorage.setItem('sayso-favourites',JSON.stringify(favourites));
   return render();
  }

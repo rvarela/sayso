@@ -14,9 +14,23 @@
   padding-top: 1rem;
 }
 
+#quickView [data-quick] {
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+#quickView .quick-dragging {
+  position: relative;
+  z-index: 2;
+  pointer-events: none;
+  transform: translateY(var(--drag-y, 0px)) scale(1.025);
+  transition: none;
+  box-shadow: 0 8px 24px #32413940;
+}
+
 .quick-row {
   position: relative;
-  isolation: isolate;
   touch-action: pan-y;
 }
 
