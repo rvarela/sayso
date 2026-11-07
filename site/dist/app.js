@@ -348,10 +348,7 @@ function loadVoices(){if(!('speechSynthesis'in window))return;availableVoices=sp
 function speak(text){if(!('speechSynthesis'in window))return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);const voice=availableVoices.find(v=>v.voiceURI===state.voice)||preferredVoice(availableVoices);if(voice)u.voice=voice;u.rate=.9;u.pitch=1;speechSynthesis.speak(u)}
 function optionsFor(node){let opts=[...(paths[node].options||[])];state.custom.filter(x=>x.category===node).forEach(x=>opts.push([x.text,'finish',escapeHtml(x.emoji||'⭐')]));return opts.sort((a,b)=>(state.usage[b[0]]||0)-(state.usage[a[0]]||0))}
 function render(){const data=paths[state.node];$('#screenTitle').textContent=data.title;$('#screenHint').textContent=data.hint||'Tap an option. It will be spoken and added to your message.';$('#eyebrow').textContent=state.node==='root'?'Let’s find the words':'Keep going';
- const composing=state.node!=='root'||state.trail.length>0;
- $('#modeTabs').classList.toggle('hidden',composing);
- $('#patientView').classList.toggle('composing',composing);
- const composer=$('#composer');composer.classList.toggle('hidden',!composing);$('#speakSentence').classList.toggle('hidden',!state.trail.length);$('#sentenceCrumbs').innerHTML=state.trail.map((x,i)=>`<button class="crumb" data-crumb="${i}" title="Change what comes next">${escapeHtml(x.text)}</button>`).join('');
+ const composer=$('#composer');composer.classList.toggle('hidden',!state.trail.length);$('#speakSentence').classList.toggle('hidden',!state.trail.length);$('#sentenceCrumbs').innerHTML=state.trail.map((x,i)=>`<button class="crumb" data-crumb="${i}" title="Change what comes next">${escapeHtml(x.text)}</button>`).join('');
  const saved=favourites.includes(message());
  $('#favourite').disabled=!complete();
  $('#favourite').textContent=saved?'★':'☆';
