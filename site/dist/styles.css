@@ -14,6 +14,60 @@
   padding-top: 1rem;
 }
 
+.quick-row {
+  position: relative;
+  overflow: hidden;
+  border-radius: 19px;
+  touch-action: pan-y;
+}
+
+.quick-row .option-card {
+  position: relative;
+  padding-right: 52px;
+  transition: transform .18s ease;
+}
+
+.quick-row.revealed .option-card {
+  transform: translateX(-120px);
+}
+
+.quick-more, .quick-remove {
+  position: absolute;
+  border: 0;
+  font-weight: 800;
+}
+
+.quick-more {
+  top: 50%;
+  right: 6px;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  color: var(--ink);
+  background: var(--paper);
+}
+
+.quick-row.revealed .quick-more {
+  right: 126px;
+}
+
+.quick-remove {
+  visibility: hidden;
+  inset: 0 0 0 auto;
+  width: 120px;
+  background: #873c33;
+  color: white;
+}
+
+.quick-row.revealed .quick-remove {
+  visibility: visible;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .quick-row .option-card { transition: none; }
+}
+
 .patient-view nav [aria-pressed="true"] {
   outline: 2px solid currentColor;
   outline-offset: -2px;
@@ -23,7 +77,26 @@
   opacity: .45;
 }
 
-#inlineAdd summary {
-  cursor: pointer;
-  padding: .5rem 0;
+#inlineAdd {
+  margin-top: 11px;
+}
+
+.option-arrow.add-plus {
+  font-size: 30px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+dialog.settings-card {
+  margin: auto;
+  width: min(440px, calc(100% - 36px));
+  color: var(--ink);
+}
+
+dialog.settings-card::backdrop {
+  background: rgb(0 0 0 / 35%);
+}
+
+dialog.settings-card h2 {
+  margin-bottom: 1rem;
 }

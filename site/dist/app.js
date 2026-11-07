@@ -19,7 +19,9 @@ const labels={needs:'I need…',feelings:'I feel…',wants:'I want…',states:'I
 let state={node:'root',trail:[],mode:'visual',voice:localStorage.getItem('sayso-voice')||'',custom:JSON.parse(localStorage.getItem('sayso-custom')||'[]'),usage:JSON.parse(localStorage.getItem('sayso-usage')||'{}')};
 const $=s=>document.querySelector(s);
 const quickSentences=['Yes.', 'No.', 'I need my caregiver.', 'I am in severe pain.', 'I am having trouble breathing.'];
+const customQuick=JSON.parse(localStorage.getItem('sayso-quick')||'[]');
 const favourites=JSON.parse(localStorage.getItem('sayso-favourites')||'[]');
+const allQuick=()=>[...quickSentences,...favourites,...customQuick];
 const escapeHtml=text=>text.replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const message=()=>state.trail.map(part=>part.text).join(' ').replace(/ \./g,'.');
 const complete=()=>state.trail.length>0 && ['finish','root','drink','food','help','severity','topics'].includes(state.node);
@@ -52,8 +54,48 @@ function showQuick(show){
  $('#quickView').classList.toggle('hidden',!show);
  $('[data-action="builder"]').setAttribute('aria-pressed',!show);
  $('[data-action="quick"]').setAttribute('aria-pressed',show);
- $('#quickView').innerHTML=[...quickSentences,...favourites].map((text,i)=>`<button class="option-card" data-quick="${i}"><span class="option-text">${escapeHtml(text)}</span></button>`).join('');
+ $('#quickView').innerHTML=allQuick().map((text,i)=>{
+  const card=`<button class="option-card" data-quick="${i}"><span class="option-text">${escapeHtml(text)}</span></button>`;
+  if(i<quickSentences.length)return card;
+  const label=i<quickSentences.length+favourites.length?'Unfavourite':'Remove';
+  return `<div class="quick-row"><button class="quick-remove" data-remove-quick="${i}">${label}</button>${card}<button class="quick-more" aria-label="Actions for ${escapeHtml(text)}" aria-expanded="false">⋯</button></div>`;
+ }).join('')
+  + '<button class="option-card" data-action="add-quick"><span class="option-text">Add another</span><span class="option-arrow add-plus" aria-hidden="true">+</span></button>';
 }
+
+function revealQuickAction(row, open){
+ row.classList.toggle('revealed',open);
+ row.querySelector('.quick-more').setAttribute('aria-expanded',open);
+}
+
+let quickSwipe;
+$('#quickView').addEventListener('pointerdown',event=>{
+ const row=event.target.closest('.quick-row');
+ quickSwipe=row&&{row,x:event.clientX,y:event.clientY};
+});
+$('#quickView').addEventListener('pointercancel',()=>{quickSwipe=null});
+$('#quickView').addEventListener('pointerup',event=>{
+ if(!quickSwipe)return;
+ const {row,x,y}=quickSwipe;
+ quickSwipe=null;
+ const dx=event.clientX-x;
+ if(Math.abs(dx)<40||Math.abs(dx)<=Math.abs(event.clientY-y))return;
+ revealQuickAction(row,dx<0);
+ const suppressClick=event=>event.stopPropagation();
+ row.addEventListener('click',suppressClick,{capture:true,once:true});
+ setTimeout(()=>row.removeEventListener('click',suppressClick,true),0);
+});
+
+$('#quickForm').addEventListener('submit',event=>{
+ event.preventDefault();
+ const text=$('#quickText').value.trim();
+ if(!text)return;
+ customQuick.push(text);
+ localStorage.setItem('sayso-quick',JSON.stringify(customQuick));
+ $('#quickDialog').close();
+ showQuick(true);
+ $('[data-action="add-quick"]').focus();
+});
 let availableVoices=[];
 function preferredVoice(voices){const english=voices.filter(v=>/^en([-_]|$)/i.test(v.lang));const preferred=/natural|online|sonia|jenny|aria|libby|ava|samantha|zira|google uk english female/i;return english.find(v=>preferred.test(v.name))||english.find(v=>v.default)||english[0]||voices[0]}
 function loadVoices(){if(!('speechSynthesis'in window))return;availableVoices=speechSynthesis.getVoices();if(!availableVoices.length)return;const selected=availableVoices.find(v=>v.voiceURI===state.voice)||preferredVoice(availableVoices);if(!state.voice&&selected){state.voice=selected.voiceURI;localStorage.setItem('sayso-voice',state.voice)}const select=$('#voiceSelect');if(!select)return;const english=availableVoices.filter(v=>/^en([-_]|$)/i.test(v.lang));const choices=english.length?english:availableVoices;select.innerHTML=choices.map(v=>`<option value="${v.voiceURI.replace(/"/g,'&quot;')}" ${v.voiceURI===state.voice?'selected':''}>${v.name} (${v.lang})</option>`).join('')}
@@ -67,8 +109,6 @@ function render(){const data=paths[state.node];$('#screenTitle').textContent=dat
  $('#favourite').setAttribute('aria-pressed',saved);
  $('#favourite').setAttribute('aria-label',saved?'Remove favourite':'Save favourite');
  $('#inlineAdd').classList.toggle('hidden',['root','topics','finish'].includes(state.node));
- $('#inlineAdd').open=false;
- $('#inlineForm').reset();
  const list=optionsFor(state.node);$('#optionList').innerHTML=list.map((o,i)=>`<button class="option-card" role="listitem" data-option="${i}">${state.mode==='visual'?`<span class="option-icon">${o[2]}</span>`:''}<span class="option-text">${escapeHtml(o[0])}</span><span class="option-arrow">›</span></button>`).join('');
 }
 function choose(index){
@@ -103,11 +143,37 @@ $('#inlineForm').addEventListener('submit',event=>{
  const text=$('#inlineWord').value.trim();
  if(!text)return;
  addWord(text,state.node);
+ $('#wordDialog').close();
  render();
- $('#inlineAdd summary').focus();
+ $('#inlineAdd').focus();
 });
 document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.option!=null)return choose(+b.dataset.option);if(b.dataset.crumb!=null){const i=+b.dataset.crumb;state.trail=state.trail.slice(0,i+1);state.node=state.trail[i].next;state.newThought=false;return render()}if(b.dataset.remove){state.custom=state.custom.filter(x=>x.id!==b.dataset.remove);localStorage.setItem('sayso-custom',JSON.stringify(state.custom));return renderCustom()}
- if(b.dataset.quick!=null)return speak([...quickSentences,...favourites][Number(b.dataset.quick)]);
+ if(b.classList.contains('quick-more')){
+  const row=b.closest('.quick-row');
+  return revealQuickAction(row,!row.classList.contains('revealed'));
+ }
+ if(b.dataset.removeQuick!=null){
+  const index=Number(b.dataset.removeQuick)-quickSentences.length;
+  const isFavourite=index<favourites.length;
+  const list=isFavourite?favourites:customQuick;
+  list.splice(isFavourite?index:index-favourites.length,1);
+  localStorage.setItem(isFavourite?'sayso-favourites':'sayso-quick',JSON.stringify(list));
+  render();
+  showQuick(true);
+  $('[data-action="add-quick"]').focus();
+  return;
+ }
+ if(b.dataset.quick!=null)return speak(allQuick()[Number(b.dataset.quick)]);
+ if(b.dataset.action==='add-quick'){
+  $('#quickForm').reset();
+  return $('#quickDialog').showModal();
+ }
+ if(b.dataset.action==='cancel-quick')return $('#quickDialog').close();
+ if(b.dataset.action==='add-word'){
+  $('#inlineForm').reset();
+  return $('#wordDialog').showModal();
+ }
+ if(b.dataset.action==='cancel-word')return $('#wordDialog').close();
  if(b.dataset.action==='quick'||b.dataset.action==='builder')return showQuick(b.dataset.action==='quick');
  if(b.dataset.action==='speak-sentence')return speak(message());
  if(b.dataset.action==='home'||b.dataset.action==='clear'||b.dataset.action==='undo')state.newThought=false;

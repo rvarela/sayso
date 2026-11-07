@@ -7,12 +7,12 @@
   <title>SaySo — communication made easier</title>
   <meta name="description" content="A gentle, guided communication aid for people with aphasia and speech difficulties.">
   <link rel="icon" type="image/png" href="assets/sayso-mark.png">
-  <link rel="stylesheet" href="styles.css?v=2">
+  <link rel="stylesheet" href="styles.css?v=4">
 </head>
 <body>
   <main id="app" class="app-shell">
     <header class="topbar">
-      <button class="brand" data-action="home" aria-label="Return home"><img class="brand-mark" src="assets/sayso-mark.png" alt=""><span>SaySo</span></button>
+      <button class="brand" data-action="home" aria-label="Return home"><img class="brand-mark" src="assets/sayso-mark.png" alt=""><span>TraSay</span></button>
       <button class="icon-button" data-action="settings" aria-label="Caregiver settings">
         <svg class="tabler-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0 -2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0 -1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37c.996.608 2.296.07 2.572-1.065z"/>
@@ -28,6 +28,17 @@
         <button class="secondary-button" data-action="quick" aria-pressed="false">Quick sentences</button>
       </nav>
       <div id="quickView" class="option-list hidden"></div>
+      <dialog id="quickDialog" class="settings-card" aria-labelledby="quickDialogTitle">
+        <form id="quickForm">
+          <h2 id="quickDialogTitle">Add a quick sentence</h2>
+          <label for="quickText">Sentence</label>
+          <input id="quickText" required maxlength="240" autofocus>
+          <div class="composer-actions">
+            <button type="button" class="secondary-button" data-action="cancel-quick">Cancel</button>
+            <button type="submit" class="speak-button">Add sentence</button>
+          </div>
+        </form>
+      </dialog>
       <div id="builderView">
       <div id="composer" class="composer hidden" aria-live="polite">
         <div class="composer-label">Your message</div>
@@ -47,13 +58,18 @@
       </div>
 
       <div id="optionList" class="option-list" role="list"></div>
-      <details id="inlineAdd" class="settings-card">
-        <summary>Add new / other</summary>
+      <button id="inlineAdd" class="option-card" data-action="add-word"><span class="option-text">Add another</span><span class="option-arrow add-plus" aria-hidden="true">+</span></button>
+      <dialog id="wordDialog" class="settings-card" aria-labelledby="wordDialogTitle">
         <form id="inlineForm">
+          <h2 id="wordDialogTitle">Add a word or phrase</h2>
           <label for="inlineWord">Word or short phrase for this step</label>
-          <div class="input-row"><input id="inlineWord" required maxlength="40"><button class="add-button">Add</button></div>
+          <input id="inlineWord" required maxlength="40" autofocus>
+          <div class="composer-actions">
+            <button type="button" class="secondary-button" data-action="cancel-word">Cancel</button>
+            <button type="submit" class="speak-button">Add</button>
+          </div>
         </form>
-      </details>
+      </dialog>
       </div>
     </section>
 
@@ -92,6 +108,6 @@
       </div>
     </section>
   </main>
-  <script src="app.js?v=3"></script>
+  <script src="app.js?v=6"></script>
 </body>
 </html>
