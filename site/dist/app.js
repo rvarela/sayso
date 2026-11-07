@@ -18,20 +18,108 @@ const paths={
 const labels={needs:'I need…',feelings:'I feel…',wants:'I want…',states:'I am…',please:'Please…',people:'People',food:'Food & drink',places:'Places'};
 let state={node:'root',trail:[],mode:'visual',voice:localStorage.getItem('sayso-voice')||'',custom:JSON.parse(localStorage.getItem('sayso-custom')||'[]'),usage:JSON.parse(localStorage.getItem('sayso-usage')||'{}')};
 const $=s=>document.querySelector(s);
+const quickSentences=['Yes.', 'No.', 'I need my caregiver.', 'I am in severe pain.', 'I am having trouble breathing.'];
+const favourites=JSON.parse(localStorage.getItem('sayso-favourites')||'[]');
+const escapeHtml=text=>text.replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+const message=()=>state.trail.map(part=>part.text).join(' ').replace(/ \./g,'.');
+const complete=()=>state.trail.length>0 && ['finish','root','drink','food','help','severity','topics'].includes(state.node);
+
+function phrase(text){
+ const previous=state.trail.at(-1)?.text;
+ const topic=state.trail.length===0||state.newThought;
+ switch(state.node){
+  case 'needs': return topic?'I need '+text:text;
+  case 'feelings': return (topic?'I feel ':'')+(text==='in pain'?'pain':text);
+  case 'food': return topic?'I would like '+text:previous==='food'||previous==='I need food'?'such as '+text:text;
+  case 'drink': return /a drink$/.test(previous)?'such as '+text:text;
+  case 'help': return text==='calling someone'?'calling':text==='understanding'?'understanding what you said':text;
+  case 'please': return text==='call someone'?'call':text;
+  case 'people': return topic?'I would like to talk to '+text:text;
+  case 'places': return (topic?'I want to go ':'')+(['home','outside'].includes(text)?text:'to '+text);
+  case 'pain': return topic?'I have pain in '+text:'in '+text;
+  case 'severity': return '. The pain is '+({ 'a little':'mild',moderate:'moderate','very strong':'severe' }[text]||text);
+  default: return text;
+ }
+}
+
+function addWord(text, category){
+ state.custom.push({id:String(Date.now()),text,category});
+ localStorage.setItem('sayso-custom',JSON.stringify(state.custom));
+}
+
+function showQuick(show){
+ $('#builderView').classList.toggle('hidden',show);
+ $('#quickView').classList.toggle('hidden',!show);
+ $('[data-action="builder"]').setAttribute('aria-pressed',!show);
+ $('[data-action="quick"]').setAttribute('aria-pressed',show);
+ $('#quickView').innerHTML=[...quickSentences,...favourites].map((text,i)=>`<button class="option-card" data-quick="${i}"><span class="option-text">${escapeHtml(text)}</span></button>`).join('');
+}
 let availableVoices=[];
 function preferredVoice(voices){const english=voices.filter(v=>/^en([-_]|$)/i.test(v.lang));const preferred=/natural|online|sonia|jenny|aria|libby|ava|samantha|zira|google uk english female/i;return english.find(v=>preferred.test(v.name))||english.find(v=>v.default)||english[0]||voices[0]}
 function loadVoices(){if(!('speechSynthesis'in window))return;availableVoices=speechSynthesis.getVoices();if(!availableVoices.length)return;const selected=availableVoices.find(v=>v.voiceURI===state.voice)||preferredVoice(availableVoices);if(!state.voice&&selected){state.voice=selected.voiceURI;localStorage.setItem('sayso-voice',state.voice)}const select=$('#voiceSelect');if(!select)return;const english=availableVoices.filter(v=>/^en([-_]|$)/i.test(v.lang));const choices=english.length?english:availableVoices;select.innerHTML=choices.map(v=>`<option value="${v.voiceURI.replace(/"/g,'&quot;')}" ${v.voiceURI===state.voice?'selected':''}>${v.name} (${v.lang})</option>`).join('')}
 function speak(text){if(!('speechSynthesis'in window))return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);const voice=availableVoices.find(v=>v.voiceURI===state.voice)||preferredVoice(availableVoices);if(voice)u.voice=voice;u.rate=.9;u.pitch=1;speechSynthesis.speak(u)}
 function optionsFor(node){let opts=[...(paths[node].options||[])];state.custom.filter(x=>x.category===node).forEach(x=>opts.push([x.text,'finish','⭐']));return opts.sort((a,b)=>(state.usage[b[0]]||0)-(state.usage[a[0]]||0))}
 function render(){const data=paths[state.node];$('#screenTitle').textContent=data.title;$('#screenHint').textContent=data.hint||'Tap an option. It will be spoken and added to your message.';$('#eyebrow').textContent=state.node==='root'?'Let’s find the words':'Keep going';
- const composer=$('#composer');composer.classList.toggle('hidden',!state.trail.length);$('#speakSentence').classList.toggle('hidden',!state.trail.length);$('#sentenceCrumbs').innerHTML=state.trail.map((x,i)=>`<button class="crumb" data-crumb="${i}" title="Change from ${x.text}">${x.text}</button>`).join('');
- const list=optionsFor(state.node);$('#optionList').innerHTML=list.map((o,i)=>`<button class="option-card" role="listitem" data-option="${i}">${state.mode==='visual'?`<span class="option-icon">${o[2]}</span>`:''}<span class="option-text">${o[0]}</span><span class="option-arrow">›</span></button>`).join('');
+ const composer=$('#composer');composer.classList.toggle('hidden',!state.trail.length);$('#speakSentence').classList.toggle('hidden',!state.trail.length);$('#sentenceCrumbs').innerHTML=state.trail.map((x,i)=>`<button class="crumb" data-crumb="${i}" title="Change what comes next">${escapeHtml(x.text)}</button>`).join('');
+ const saved=favourites.includes(message());
+ $('#favourite').disabled=!complete();
+ $('#favourite').textContent=saved?'★':'☆';
+ $('#favourite').setAttribute('aria-pressed',saved);
+ $('#favourite').setAttribute('aria-label',saved?'Remove favourite':'Save favourite');
+ $('#inlineAdd').classList.toggle('hidden',['root','topics','finish'].includes(state.node));
+ $('#inlineAdd').open=false;
+ $('#inlineForm').reset();
+ const list=optionsFor(state.node);$('#optionList').innerHTML=list.map((o,i)=>`<button class="option-card" role="listitem" data-option="${i}">${state.mode==='visual'?`<span class="option-icon">${o[2]}</span>`:''}<span class="option-text">${escapeHtml(o[0])}</span><span class="option-arrow">›</span></button>`).join('');
 }
-function choose(index){const data=paths[state.node],o=optionsFor(state.node)[index];if(!o)return;speak(o[0]);state.usage[o[0]]=(state.usage[o[0]]||0)+1;localStorage.setItem('sayso-usage',JSON.stringify(state.usage));if(data.add!==false&&o[0]!=='Add another thought')state.trail.push({text:o[0],node:state.node});state.node=o[1];render()}
+function choose(index){
+ const node=state.node, o=optionsFor(node)[index];
+ if(!o)return;
+ speak(o[0]);
+ state.usage[o[0]]=(state.usage[o[0]]||0)+1;
+ localStorage.setItem('sayso-usage',JSON.stringify(state.usage));
+ if(node==='finish') state.newThought=true;
+ else if(paths[node].add!==false&&o[1]!=='topics'){
+  const text=phrase(o[0]);
+  state.trail.push({text:state.newThought?'. '+text:text,node,next:o[1]});
+  state.newThought=false;
+ }
+ state.node=o[1];
+ render();
+}
 function showSettings(show){$('#patientView').classList.toggle('hidden',show);$('#settingsView').classList.toggle('hidden',!show);renderCustom();scrollTo(0,0)}
-function renderCustom(){const box=$('#customItems');$('#customCount').textContent=state.custom.length;if(!state.custom.length){box.innerHTML='<p class="empty-state">No personal words added yet.</p>';return}box.innerHTML=Object.keys(labels).map(category=>{const items=state.custom.filter(x=>x.category===category);if(!items.length)return'';return`<section class="custom-group"><h3>${labels[category]}</h3>${items.map(x=>`<div class="custom-item"><span>${x.text}</span><button class="remove-button" data-remove="${x.id}">Remove</button></div>`).join('')}</section>`}).join('')}
+function renderCustom(){
+ const box=$('#customItems');
+ $('#customCount').textContent=state.custom.length;
+ const groups=new Map();
+ for(const item of state.custom){
+  if(!groups.has(item.category))groups.set(item.category,[]);
+  groups.get(item.category).push(item);
+ }
+ box.innerHTML=Array.from(groups,([category,items])=>`<section class="custom-group"><h3>${escapeHtml(labels[category]||paths[category]?.title||category)}</h3>${items.map(x=>`<div class="custom-item"><span>${escapeHtml(x.text)}</span><button class="remove-button" data-remove="${escapeHtml(x.id)}">Remove</button></div>`).join('')}</section>`).join('')||'<p class="empty-state">No personal words added yet.</p>';
+}
 document.addEventListener('change',e=>{if(e.target.id==='voiceSelect'){state.voice=e.target.value;localStorage.setItem('sayso-voice',state.voice);speak('This is how I will sound.')}});
-document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.option!=null)return choose(+b.dataset.option);if(b.dataset.crumb!=null){const i=+b.dataset.crumb,stateItem=state.trail[i];state.trail=state.trail.slice(0,i);state.node=stateItem.node;return render()}if(b.dataset.remove){state.custom=state.custom.filter(x=>x.id!==b.dataset.remove);localStorage.setItem('sayso-custom',JSON.stringify(state.custom));return renderCustom()}
+$('#inlineForm').addEventListener('submit',event=>{
+ event.preventDefault();
+ const text=$('#inlineWord').value.trim();
+ if(!text)return;
+ addWord(text,state.node);
+ render();
+ $('#inlineAdd summary').focus();
+});
+document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.option!=null)return choose(+b.dataset.option);if(b.dataset.crumb!=null){const i=+b.dataset.crumb;state.trail=state.trail.slice(0,i+1);state.node=state.trail[i].next;state.newThought=false;return render()}if(b.dataset.remove){state.custom=state.custom.filter(x=>x.id!==b.dataset.remove);localStorage.setItem('sayso-custom',JSON.stringify(state.custom));return renderCustom()}
+ if(b.dataset.quick!=null)return speak([...quickSentences,...favourites][Number(b.dataset.quick)]);
+ if(b.dataset.action==='quick'||b.dataset.action==='builder')return showQuick(b.dataset.action==='quick');
+ if(b.dataset.action==='speak-sentence')return speak(message());
+ if(b.dataset.action==='home'||b.dataset.action==='clear'||b.dataset.action==='undo')state.newThought=false;
+ if(b.dataset.action==='home')showQuick(false);
+ if(b.dataset.action==='favourite'){
+  if(!complete())return;
+  const index=favourites.indexOf(message());
+  if(index<0)favourites.push(message());
+  else favourites.splice(index,1);
+  localStorage.setItem('sayso-favourites',JSON.stringify(favourites));
+  return render();
+ }
  const a=b.dataset.action;if(a==='settings')showSettings(true);if(a==='close-settings')showSettings(false);if(a==='home'){state.node='root';state.trail=[];render()}if(a==='undo'){const last=state.trail.pop();state.node=last?.node||'root';render()}if(a==='clear'){state.node='root';state.trail=[];render()}if(a==='speak-sentence')speak(state.trail.map(x=>x.text).join(' '));if(a==='preview-voice')speak('Hello. This is the voice I will use to help you communicate.');if(a==='add-custom'){const input=$('#customLabel'),text=input.value.trim();if(!text)return $('#formStatus').textContent='Please enter a word or phrase.';state.custom.push({id:String(Date.now()),text,category:$('#categorySelect').value});localStorage.setItem('sayso-custom',JSON.stringify(state.custom));input.value='';$('#formStatus').textContent=`Added “${text}”.`;renderCustom()}if(a==='reset-learning'){state.usage={};localStorage.removeItem('sayso-usage');b.textContent='Reset ✓';setTimeout(()=>b.textContent='Reset',1200)}});
 if('speechSynthesis'in window){speechSynthesis.addEventListener('voiceschanged',loadVoices);loadVoices()}
 render();

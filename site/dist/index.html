@@ -23,12 +23,19 @@
     </header>
 
     <section id="patientView" class="view patient-view">
+      <nav class="composer-actions" aria-label="Communication mode">
+        <button class="secondary-button" data-action="builder" aria-pressed="true">Builder</button>
+        <button class="secondary-button" data-action="quick" aria-pressed="false">Quick sentences</button>
+      </nav>
+      <div id="quickView" class="option-list hidden"></div>
+      <div id="builderView">
       <div id="composer" class="composer hidden" aria-live="polite">
         <div class="composer-label">Your message</div>
         <div id="sentenceCrumbs" class="crumbs"></div>
         <div class="composer-actions">
           <button class="secondary-button" data-action="undo">↶ Undo</button>
           <button class="secondary-button" data-action="clear">Clear</button>
+          <button id="favourite" class="secondary-button" data-action="favourite" aria-label="Save favourite" disabled>☆</button>
           <button id="speakSentence" class="speak-button hidden" data-action="speak-sentence">▶ Speak</button>
         </div>
       </div>
@@ -40,6 +47,14 @@
       </div>
 
       <div id="optionList" class="option-list" role="list"></div>
+      <details id="inlineAdd" class="settings-card">
+        <summary>Add new / other</summary>
+        <form id="inlineForm">
+          <label for="inlineWord">Word or short phrase for this step</label>
+          <div class="input-row"><input id="inlineWord" required maxlength="40"><button class="add-button">Add</button></div>
+        </form>
+      </details>
+      </div>
     </section>
 
     <section id="settingsView" class="view settings-view hidden">
@@ -77,6 +92,6 @@
       </div>
     </section>
   </main>
-  <script src="app.js"></script>
+  <script src="app.js?v=3"></script>
 </body>
 </html>
