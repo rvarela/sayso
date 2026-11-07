@@ -88,8 +88,29 @@ let drag;
 function endDrag(){
  if(!drag)return;
  clearTimeout(drag.timer);
- drag.card.classList.remove('quick-dragging');
- drag.card.style.removeProperty('--drag-y');
+ drag.item.classList.remove('quick-dragging');
+ drag.item.style.removeProperty('--drag-y');
+}
+
+function moveQuickCard(clientY){
+ const {item,startTop,y}=drag;
+ const siblings=Array.from($('#quickView').children).filter(node=>node!==item);
+ const center=startTop+item.offsetHeight/2+clientY-y;
+ const next=siblings.find(node=>!node.matches('[data-action="add-quick"]') && center<node.offsetTop+node.offsetHeight/2)
+  || $('[data-action="add-quick"]');
+ if(item.nextElementSibling!==next){
+  const oldPositions=siblings.map(node=>node.getBoundingClientRect().top);
+  siblings.forEach(node=>node.getAnimations().filter(animation=>animation.id==='quick-shift').forEach(animation=>animation.cancel()));
+  next.before(item);
+  const newPositions=siblings.map(node=>node.getBoundingClientRect().top);
+  if(!matchMedia('(prefers-reduced-motion: reduce)').matches){
+   siblings.forEach((node,i)=>{
+    const offset=oldPositions[i]-newPositions[i];
+    if(offset)node.animate([{translate:`0 ${offset}px`},{translate:'0 0'}],{id:'quick-shift',duration:180,easing:'ease-out'});
+   });
+  }
+ }
+ item.style.setProperty('--drag-y',clientY-y+startTop-item.offsetTop+'px');
 }
 $('#quickView').addEventListener('pointerdown',event=>{
  if(!event.isPrimary||event.button!==0)return;
@@ -97,18 +118,20 @@ $('#quickView').addEventListener('pointerdown',event=>{
  quickSwipe=row&&{row,x:event.clientX,y:event.clientY};
  const card=event.target.closest('[data-quick]');
  if(!card)return;
- drag={card,x:event.clientX,y:event.clientY,active:false};
+ const item=row||card;
+ drag={item,startTop:item.offsetTop,x:event.clientX,y:event.clientY,active:false};
  drag.timer=setTimeout(()=>{
   drag.active=true;
   quickSwipe=null;
-  card.setPointerCapture(event.pointerId);
-  card.classList.add('quick-dragging');
+  if(row)revealQuickAction(row,false);
+  $('#quickView').setPointerCapture(event.pointerId);
+  item.classList.add('quick-dragging');
  },350);
 });
 $('#quickView').addEventListener('pointermove',event=>{
  if(!drag)return;
  const dy=event.clientY-drag.y;
- if(drag.active)drag.card.style.setProperty('--drag-y',dy+'px');
+ if(drag.active)moveQuickCard(event.clientY);
  else if(Math.hypot(event.clientX-drag.x,dy)>10){endDrag();drag=null;}
 });
 $('#quickView').addEventListener('touchmove',event=>{
@@ -120,20 +143,24 @@ $('#quickView').addEventListener('pointerleave',()=>{
 $('#quickView').addEventListener('contextmenu',event=>{
  if(event.target.closest('[data-quick]'))event.preventDefault();
 });
-$('#quickView').addEventListener('pointercancel',()=>{quickSwipe=null;endDrag();drag=null});
+$('#quickView').addEventListener('pointercancel',()=>{
+ const active=drag?.active;
+ quickSwipe=null;
+ endDrag();
+ drag=null;
+ if(active)showQuick(true);
+});
 $('#quickView').addEventListener('pointerup',event=>{
  if(drag?.active){
-  const from=Number(drag.card.dataset.quick);
-  const to=document.elementFromPoint(event.clientX,event.clientY)?.closest('[data-quick]')?.dataset.quick;
+  const item=drag.item;
+  const offset=item.style.getPropertyValue('--drag-y')||'0px';
+  quickOrder=Array.from($('#quickView').querySelectorAll('[data-quick]'),card=>Number(card.dataset.quick));
   endDrag();
   drag=null;
-  if(to!=null&&Number(to)!==from){
-   const position=quickOrder.indexOf(Number(to));
-   quickOrder.splice(quickOrder.indexOf(from),1);
-   quickOrder.splice(position,0,from);
-   saveQuickOrder();
+  saveQuickOrder();
+  if(!matchMedia('(prefers-reduced-motion: reduce)').matches){
+   item.animate([{transform:`translateY(${offset}) scale(1.025)`},{transform:'none'}],{duration:180,easing:'ease-out'});
   }
-  showQuick(true);
   return;
  }
  endDrag();
