@@ -183,7 +183,7 @@ function renderAssess(){
    const summary=exercise==='pictures'?`${matches} of ${trials.length} matched the expected picture.`:'All action pictures shown.';
    view.innerHTML=`<div class="prompt-block"><h1 tabindex="-1">Exercise complete</h1><p>${summary}</p></div><button class="secondary-button" data-action="assess-menu">Back to exercises</button>`;
   }else{
-   const heading=exercise==='pictures'?title:`Usually ${trial[1]}…`;
+   const heading=exercise==='pictures'?title:`Daily ${trial[1]}…`;
    const [icon,label]=exercise==='pictures'?trial.target:[trial[0],trial[2]];
    view.innerHTML=`<div class="prompt-block assess-prompt"><p class="eyebrow">${trialIndex+1} of ${trials.length}</p><h1 tabindex="-1">${heading}</h1></div>
     <div class="assess-picture${exercise==='actions'?' assess-action-picture':''}" role="img" aria-label="${label}">${icon}</div>`
