@@ -372,7 +372,14 @@ function choose(index){
  state.node=o[1];
  render();
 }
-function showSettings(show){$('#patientView').classList.toggle('hidden',show);$('#settingsView').classList.toggle('hidden',!show);renderCustom();scrollTo(0,0)}
+function showSettings(show){
+ $('#patientView').classList.toggle('hidden',show);
+ $('#settingsView').classList.toggle('hidden',!show);
+ $('[data-action="settings"]').classList.toggle('hidden',show);
+ $('[data-action="close-settings"]').classList.toggle('hidden',!show);
+ renderCustom();
+ scrollTo(0,0);
+}
 function renderCustom(){
  const box=$('#customItems');
  $('#customCount').textContent=state.custom.length;
