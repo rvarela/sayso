@@ -446,7 +446,10 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)r
  if(b.dataset.action==='assess-next'){trialIndex++;return renderAssess();}
  if(b.dataset.action==='speak-sentence')return speak(message());
  if(b.dataset.action==='home'||b.dataset.action==='clear'||b.dataset.action==='undo')state.newThought=false;
- if(b.dataset.action==='home')showQuick(false);
+ if(b.dataset.action==='home'){
+  showSettings(false);
+  showQuick(false);
+ }
  if(b.dataset.action==='favourite'){
   if(!complete())return;
   const index=favourites.indexOf(message());
