@@ -33,6 +33,8 @@
           <h2 id="quickDialogTitle">Add a quick sentence</h2>
           <label for="quickText">Sentence</label>
           <input id="quickText" required maxlength="240" autofocus>
+          <label for="quickEmoji">Emoji (optional)</label>
+          <input id="quickEmoji" maxlength="32" placeholder="e.g. 💬">
           <div class="composer-actions">
             <button type="button" class="secondary-button" data-action="cancel-quick">Cancel</button>
             <button type="submit" class="speak-button">Add sentence</button>
@@ -64,6 +66,8 @@
           <h2 id="wordDialogTitle">Add a word or phrase</h2>
           <label for="inlineWord">Word or short phrase for this step</label>
           <input id="inlineWord" required maxlength="40" autofocus>
+          <label for="wordEmoji">Emoji (optional)</label>
+          <input id="wordEmoji" maxlength="32" placeholder="e.g. ⭐">
           <div class="composer-actions">
             <button type="button" class="secondary-button" data-action="cancel-word">Cancel</button>
             <button type="submit" class="speak-button">Add</button>
@@ -108,6 +112,6 @@
       </div>
     </section>
   </main>
-  <script src="app.js?v=6"></script>
+  <script src="app.js?v=7"></script>
 </body>
 </html>

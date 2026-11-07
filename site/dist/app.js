@@ -44,8 +44,8 @@ function phrase(text){
  }
 }
 
-function addWord(text, category){
- state.custom.push({id:String(Date.now()),text,category});
+function addWord(text, category, emoji){
+ state.custom.push({id:String(Date.now()),text,category,emoji});
  localStorage.setItem('sayso-custom',JSON.stringify(state.custom));
 }
 
@@ -54,8 +54,10 @@ function showQuick(show){
  $('#quickView').classList.toggle('hidden',!show);
  $('[data-action="builder"]').setAttribute('aria-pressed',!show);
  $('[data-action="quick"]').setAttribute('aria-pressed',show);
- $('#quickView').innerHTML=allQuick().map((text,i)=>{
-  const card=`<button class="option-card" data-quick="${i}"><span class="option-text">${escapeHtml(text)}</span></button>`;
+ $('#quickView').innerHTML=allQuick().map((entry,i)=>{
+  const {text,emoji}=typeof entry==='string'?{text:entry}:entry;
+  const icon=emoji?`<span class="option-icon" aria-hidden="true">${escapeHtml(emoji)}</span>`:'';
+  const card=`<button class="option-card" data-quick="${i}">${icon}<span class="option-text">${escapeHtml(text)}</span></button>`;
   if(i<quickSentences.length)return card;
   const label=i<quickSentences.length+favourites.length?'Unfavourite':'Remove';
   return `<div class="quick-row"><button class="quick-remove" data-remove-quick="${i}">${label}</button>${card}<button class="quick-more" aria-label="Actions for ${escapeHtml(text)}" aria-expanded="false">⋯</button></div>`;
@@ -90,7 +92,7 @@ $('#quickForm').addEventListener('submit',event=>{
  event.preventDefault();
  const text=$('#quickText').value.trim();
  if(!text)return;
- customQuick.push(text);
+ customQuick.push({text,emoji:$('#quickEmoji').value.trim()});
  localStorage.setItem('sayso-quick',JSON.stringify(customQuick));
  $('#quickDialog').close();
  showQuick(true);
@@ -100,7 +102,7 @@ let availableVoices=[];
 function preferredVoice(voices){const english=voices.filter(v=>/^en([-_]|$)/i.test(v.lang));const preferred=/natural|online|sonia|jenny|aria|libby|ava|samantha|zira|google uk english female/i;return english.find(v=>preferred.test(v.name))||english.find(v=>v.default)||english[0]||voices[0]}
 function loadVoices(){if(!('speechSynthesis'in window))return;availableVoices=speechSynthesis.getVoices();if(!availableVoices.length)return;const selected=availableVoices.find(v=>v.voiceURI===state.voice)||preferredVoice(availableVoices);if(!state.voice&&selected){state.voice=selected.voiceURI;localStorage.setItem('sayso-voice',state.voice)}const select=$('#voiceSelect');if(!select)return;const english=availableVoices.filter(v=>/^en([-_]|$)/i.test(v.lang));const choices=english.length?english:availableVoices;select.innerHTML=choices.map(v=>`<option value="${v.voiceURI.replace(/"/g,'&quot;')}" ${v.voiceURI===state.voice?'selected':''}>${v.name} (${v.lang})</option>`).join('')}
 function speak(text){if(!('speechSynthesis'in window))return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);const voice=availableVoices.find(v=>v.voiceURI===state.voice)||preferredVoice(availableVoices);if(voice)u.voice=voice;u.rate=.9;u.pitch=1;speechSynthesis.speak(u)}
-function optionsFor(node){let opts=[...(paths[node].options||[])];state.custom.filter(x=>x.category===node).forEach(x=>opts.push([x.text,'finish','⭐']));return opts.sort((a,b)=>(state.usage[b[0]]||0)-(state.usage[a[0]]||0))}
+function optionsFor(node){let opts=[...(paths[node].options||[])];state.custom.filter(x=>x.category===node).forEach(x=>opts.push([x.text,'finish',escapeHtml(x.emoji||'⭐')]));return opts.sort((a,b)=>(state.usage[b[0]]||0)-(state.usage[a[0]]||0))}
 function render(){const data=paths[state.node];$('#screenTitle').textContent=data.title;$('#screenHint').textContent=data.hint||'Tap an option. It will be spoken and added to your message.';$('#eyebrow').textContent=state.node==='root'?'Let’s find the words':'Keep going';
  const composer=$('#composer');composer.classList.toggle('hidden',!state.trail.length);$('#speakSentence').classList.toggle('hidden',!state.trail.length);$('#sentenceCrumbs').innerHTML=state.trail.map((x,i)=>`<button class="crumb" data-crumb="${i}" title="Change what comes next">${escapeHtml(x.text)}</button>`).join('');
  const saved=favourites.includes(message());
@@ -142,7 +144,7 @@ $('#inlineForm').addEventListener('submit',event=>{
  event.preventDefault();
  const text=$('#inlineWord').value.trim();
  if(!text)return;
- addWord(text,state.node);
+ addWord(text,state.node,$('#wordEmoji').value.trim());
  $('#wordDialog').close();
  render();
  $('#inlineAdd').focus();
@@ -163,7 +165,10 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)r
   $('[data-action="add-quick"]').focus();
   return;
  }
- if(b.dataset.quick!=null)return speak(allQuick()[Number(b.dataset.quick)]);
+ if(b.dataset.quick!=null){
+  const entry=allQuick()[Number(b.dataset.quick)];
+  return speak(typeof entry==='string'?entry:entry.text);
+ }
  if(b.dataset.action==='add-quick'){
   $('#quickForm').reset();
   return $('#quickDialog').showModal();
