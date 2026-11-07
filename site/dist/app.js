@@ -197,7 +197,7 @@ const exercises={
  nonsense:{title:'Nonsense words',icon:'🔤',trials:nonsenseTrials,promptType:'words'},
  completion:{title:'Complete with words',icon:'💬',trials:completionTrials,promptType:'sentences'}
 };
-let exercise=null, trialIndex=0, matches=0;
+let exercise=null, trialIndex=0, matches=0, trialCount=0;
 
 function renderAssess(){
  const view=$('#assessView');
@@ -207,18 +207,24 @@ function renderAssess(){
    +'</div><p>Informal exercises. Use your own clinical judgement when interpreting responses.</p>';
  }else{
   const {title,trials,promptType}=exercises[exercise];
-  const trial=trials[trialIndex];
-  if(!trial){
-   const summary=exercise==='pictures'?`${matches} of ${trials.length} matched the expected picture.`
-    :promptType?`All ${trials.length} ${promptType} shown.`:'All action pictures shown.';
+  if(!trialCount){
+   const counts=Array.from({length:Math.floor((trials.length-1)/5)},(_,i)=>(i+1)*5);
+   view.innerHTML=`<div class="prompt-block"><h1 tabindex="-1">${title}</h1><p>How many prompts?</p></div>
+    <div class="assess-counts">${counts.map(count=>`<button class="secondary-button" data-count="${count}">${count}</button>`).join('')}
+    <button class="secondary-button" data-count="${trials.length}">All (${trials.length})</button></div>
+    <button class="back-button" data-action="assess-menu">← Back to exercises</button>`;
+  }else if(trialIndex>=trialCount){
+   const summary=exercise==='pictures'?`${matches} of ${trialCount} matched the expected picture.`
+    :`${trialCount} ${promptType||'action pictures'} shown.`;
    view.innerHTML=`<div class="prompt-block"><h1 tabindex="-1">Exercise complete</h1><p>${summary}</p></div><button class="secondary-button" data-action="assess-menu">Back to exercises</button>`;
   }else if(promptType){
-   view.innerHTML=`<div class="prompt-block assess-prompt"><p class="eyebrow">${trialIndex+1} of ${trials.length}</p><h1 tabindex="-1">${trial}</h1></div>
+   view.innerHTML=`<div class="prompt-block assess-prompt"><p class="eyebrow">${trialIndex+1} of ${trialCount}</p><h1 tabindex="-1">${trials[trialIndex]}</h1></div>
     <button class="speak-button assess-next" data-action="assess-next">Next</button>`;
   }else{
+   const trial=trials[trialIndex];
    const heading=exercise==='pictures'?title:`Daily ${trial[1]}…`;
    const [icon,label]=exercise==='pictures'?trial.target:[trial[0],trial[2]];
-   view.innerHTML=`<div class="prompt-block assess-prompt"><p class="eyebrow">${trialIndex+1} of ${trials.length}</p><h1 tabindex="-1">${heading}</h1></div>
+   view.innerHTML=`<div class="prompt-block assess-prompt"><p class="eyebrow">${trialIndex+1} of ${trialCount}</p><h1 tabindex="-1">${heading}</h1></div>
     <div class="assess-picture${exercise==='actions'?' assess-action-picture':''}" role="img" aria-label="${label}">${icon}</div>`
     +(exercise==='pictures'
       ?`<div class="assess-choices">${trial.choices.map(([picture,name],i)=>`<button class="option-card" aria-label="${name}" data-match="${i}">${picture}</button>`).join('')}</div>`
@@ -422,6 +428,11 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)r
  if(b.dataset.action==='assess'){showMode('assess');return renderAssess();}
  if(b.dataset.exercise){
   exercise=b.dataset.exercise;
+  trialCount=0;
+  return renderAssess();
+ }
+ if(b.dataset.count){
+  trialCount=Number(b.dataset.count);
   trialIndex=0;
   matches=0;
   return renderAssess();

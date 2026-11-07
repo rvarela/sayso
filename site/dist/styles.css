@@ -21,6 +21,18 @@
   gap: 11px;
 }
 
+.assess-counts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.assess-counts button {
+  min-height: 52px;
+  font-size: 18px;
+}
+
 .assess-grid .option-card {
   flex-direction: column;
   justify-content: center;
