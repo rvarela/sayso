@@ -164,9 +164,20 @@ const actionTrials=[
  ['👩🛒','she','Woman shopping'],
  ['👨🎁🎀','he','Man wrapping a present']
 ];
+const readingTrials=[
+ 'professor','spaghetti','gravity','smothering','September',
+ 'atmosphere','grandfather','grasshopper','telegram','magnitude',
+ 'natural','raspberry','glamorous','elephant','jaguar',
+ 'photograph','chrysanthemum','rhinoceros','helicopter','caterpillar',
+ 'thermometer','refrigerator','chocolate','strawberry','pomegranate',
+ 'cinnamon','broccoli','cauliflower','squirrel','crocodile',
+ 'hippopotamus','ambulance','orchestra','xylophone','percussion',
+ 'thunderstorm','telescope','astronaut','constellation','archipelago'
+];
 const exercises={
  pictures:{title:'Find the similar picture',trials:pictureTrials},
- actions:{title:'Finish the sentence',trials:actionTrials}
+ actions:{title:'Finish the sentence',trials:actionTrials},
+ reading:{title:'Read aloud',trials:readingTrials}
 };
 let exercise=null, trialIndex=0, matches=0;
 
@@ -180,8 +191,12 @@ function renderAssess(){
   const {title,trials}=exercises[exercise];
   const trial=trials[trialIndex];
   if(!trial){
-   const summary=exercise==='pictures'?`${matches} of ${trials.length} matched the expected picture.`:'All action pictures shown.';
+   const summary=exercise==='pictures'?`${matches} of ${trials.length} matched the expected picture.`
+    :exercise==='reading'?'All 40 words shown.':'All action pictures shown.';
    view.innerHTML=`<div class="prompt-block"><h1 tabindex="-1">Exercise complete</h1><p>${summary}</p></div><button class="secondary-button" data-action="assess-menu">Back to exercises</button>`;
+  }else if(exercise==='reading'){
+   view.innerHTML=`<div class="prompt-block assess-prompt"><p class="eyebrow">${trialIndex+1} of ${trials.length}</p><h1 tabindex="-1">${trial}</h1></div>
+    <button class="speak-button assess-next" data-action="assess-next">Next</button>`;
   }else{
    const heading=exercise==='pictures'?title:`Daily ${trial[1]}…`;
    const [icon,label]=exercise==='pictures'?trial.target:[trial[0],trial[2]];
