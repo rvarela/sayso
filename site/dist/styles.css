@@ -10,6 +10,10 @@
   margin-bottom: 1rem;
 }
 
+#quickView {
+  padding-top: 1rem;
+}
+
 .patient-view nav [aria-pressed="true"] {
   outline: 2px solid currentColor;
   outline-offset: -2px;
