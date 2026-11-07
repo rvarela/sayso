@@ -184,28 +184,35 @@ const nonsenseTrials=[
  'brintle','frask','thindle','veltrum','snorvish',
  'whindle','drelvish','crumpleth','grastle','meltrane'
 ];
+const completionTrials=[
+ 'He went…','She decided to…','He needed…','She wanted…','They found…',
+ 'I forgot to…','We waited for…','She bought…','He opened…','They agreed to…',
+ 'I would like…','She looked for…','He asked for…','We talked about…','They planned to…',
+ 'She remembered to…','He brought…','We listened to…','I was surprised by…','They came back because…'
+];
 const exercises={
- pictures:{title:'Find the similar picture',trials:pictureTrials},
- actions:{title:'Finish the sentence',trials:actionTrials},
- reading:{title:'Read aloud',trials:readingTrials,words:true},
- nonsense:{title:'Nonsense words',trials:nonsenseTrials,words:true}
+ pictures:{title:'Find the similar picture',icon:'🖼️',trials:pictureTrials},
+ actions:{title:'Finish the sentence',icon:'🏃',trials:actionTrials},
+ reading:{title:'Read aloud',icon:'📖',trials:readingTrials,promptType:'words'},
+ nonsense:{title:'Nonsense words',icon:'🔤',trials:nonsenseTrials,promptType:'words'},
+ completion:{title:'Complete with words',icon:'💬',trials:completionTrials,promptType:'sentences'}
 };
 let exercise=null, trialIndex=0, matches=0;
 
 function renderAssess(){
  const view=$('#assessView');
  if(!exercise){
-  view.innerHTML='<div class="prompt-block"><h1 tabindex="-1">Assess</h1><p>Therapist-led picture exercises.</p></div><div class="option-list">'
-   +Object.entries(exercises).map(([id,{title}])=>`<button class="option-card" data-exercise="${id}"><span class="option-text">${title}</span><span class="option-arrow" aria-hidden="true">›</span></button>`).join('')
+  view.innerHTML='<div class="prompt-block"><h1 tabindex="-1">Assess</h1><p>Therapist-led exercises.</p></div><div class="assess-grid">'
+   +Object.entries(exercises).map(([id,{title,icon}])=>`<button class="option-card" data-exercise="${id}"><span class="option-icon" aria-hidden="true">${icon}</span><span class="option-text">${title}</span></button>`).join('')
    +'</div><p>Informal exercises. Use your own clinical judgement when interpreting responses.</p>';
  }else{
-  const {title,trials,words}=exercises[exercise];
+  const {title,trials,promptType}=exercises[exercise];
   const trial=trials[trialIndex];
   if(!trial){
    const summary=exercise==='pictures'?`${matches} of ${trials.length} matched the expected picture.`
-    :words?`All ${trials.length} words shown.`:'All action pictures shown.';
+    :promptType?`All ${trials.length} ${promptType} shown.`:'All action pictures shown.';
    view.innerHTML=`<div class="prompt-block"><h1 tabindex="-1">Exercise complete</h1><p>${summary}</p></div><button class="secondary-button" data-action="assess-menu">Back to exercises</button>`;
-  }else if(words){
+  }else if(promptType){
    view.innerHTML=`<div class="prompt-block assess-prompt"><p class="eyebrow">${trialIndex+1} of ${trials.length}</p><h1 tabindex="-1">${trial}</h1></div>
     <button class="speak-button assess-next" data-action="assess-next">Next</button>`;
   }else{

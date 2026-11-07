@@ -15,6 +15,25 @@
   text-align: center;
 }
 
+.assess-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 11px;
+}
+
+.assess-grid .option-card {
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+  min-height: 132px;
+  padding: 12px 8px;
+  gap: 8px;
+}
+
+.assess-grid .option-text {
+  font-size: clamp(17px, 4.5vw, 22px);
+}
+
 .assess-picture {
   display: grid;
   place-items: center;
