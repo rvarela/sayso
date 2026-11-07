@@ -90,6 +90,28 @@ const pictureTrials=[
  {target:['🥄','Spoon'],choices:[['🎸','Guitar'],['🍴','Fork'],['🏠','House']],answer:1},
  {target:['🦆','Duck'],choices:[['📚','Books'],['🧤','Glove'],['🐓','Rooster']],answer:2}
 ];
+const picturePairs=[
+ [['🐘','Elephant'],['🦏','Rhinoceros']], [['🦁','Lion'],['🐅','Tiger']],
+ [['🐝','Bee'],['🦋','Butterfly']], [['🐬','Dolphin'],['🐋','Whale']],
+ [['🍊','Orange'],['🍋','Lemon']], [['🍓','Strawberry'],['🫐','Blueberries']],
+ [['🥕','Carrot'],['🥦','Broccoli']], [['🥛','Milk'],['🧃','Juice']],
+ [['🍞','Bread'],['🥐','Croissant']], [['🍪','Cookie'],['🧁','Cupcake']],
+ [['👒','Sun hat'],['🧢','Cap']], [['🧥','Coat'],['🧣','Scarf']],
+ [['👞','Dress shoe'],['🥾','Boot']], [['🛋️','Sofa'],['🪑','Chair']],
+ [['🛏️','Bed'],['🛌','Person in bed']], [['🧹','Broom'],['🧽','Sponge']],
+ [['🖊️','Pen'],['✏️','Pencil']], [['📕','Book'],['📓','Notebook']],
+ [['🎸','Guitar'],['🎻','Violin']], [['🥁','Drum'],['🪘','Hand drum']],
+ [['🚂','Train'],['🚋','Tram']], [['🚢','Ship'],['⛴️','Ferry']],
+ [['🏀','Basketball'],['🏐','Volleyball']], [['🌷','Tulip'],['🌻','Sunflower']]
+];
+const pictureDistractors=[['⏰','Alarm clock'],['🧲','Magnet'],['🕯️','Candle'],['💎','Gem'],['☂️','Umbrella'],['🪁','Kite']];
+picturePairs.flatMap(([a,b])=>[[a,b],[b,a]]).forEach(([target,match],index)=>{
+ const choices=[pictureDistractors[index%6],pictureDistractors[(index+2)%6]];
+ const answer=(index+Math.floor(index/3))%3;
+ choices.splice(answer,0,match);
+ pictureTrials.push({target,choices,answer});
+});
+
 const actionTrials=[
  ['🏊‍♀️','she','Woman swimming'],
  ['🏃‍♂️','he','Man running'],
@@ -98,7 +120,49 @@ const actionTrials=[
  ['💃','she','Woman dancing'],
  ['🧗‍♂️','he','Man climbing'],
  ['🏄‍♀️','she','Woman surfing'],
- ['🏋️‍♂️','he','Man lifting weights']
+ ['🏋️‍♂️','he','Man lifting weights'],
+ ['🚶‍♀️','she','Woman walking'],
+ ['🧎‍♂️','he','Man kneeling'],
+ ['🧘‍♀️','she','Woman meditating'],
+ ['🤸‍♂️','he','Man doing a cartwheel'],
+ ['⛹️‍♀️','she','Woman bouncing a basketball'],
+ ['🏌️‍♂️','he','Man playing golf'],
+ ['🤾‍♀️','she','Woman throwing a ball'],
+ ['🚣‍♂️','he','Man rowing'],
+ ['🤽‍♀️','she','Woman playing water polo'],
+ ['🏇','he','Man riding a horse'],
+ ['🤿','she','Woman diving'],
+ ['🏂','he','Man snowboarding'],
+ ['👩‍🍳🍳','she','Woman cooking'],
+ ['👨‍🎤🎤','he','Man singing'],
+ ['👩‍🎨🖌️','she','Woman painting'],
+ ['👨‍🔧🔧','he','Man fixing something'],
+ ['👩‍🌾🌱','she','Woman planting'],
+ ['👨‍💻⌨️','he','Man typing'],
+ ['👩📖','she','Woman reading'],
+ ['👨✍️','he','Man writing'],
+ ['👩📸','she','Woman taking a photo'],
+ ['👨🎣','he','Man fishing'],
+ ['👩🪥','she','Woman brushing her teeth'],
+ ['👨🪒','he','Man shaving'],
+ ['👩🧵🪡','she','Woman sewing'],
+ ['👨🧹','he','Man sweeping'],
+ ['👩🧽🍽️','she','Woman washing dishes'],
+ ['👨🧺👕','he','Man doing laundry'],
+ ['👩🐕🦮','she','Woman walking a dog'],
+ ['👨🎸','he','Man playing guitar'],
+ ['👩🎹','she','Woman playing piano'],
+ ['👨📞','he','Man making a phone call'],
+ ['👩🍽️','she','Woman eating'],
+ ['👨🥤','he','Man drinking'],
+ ['👩🤲🧼','she','Woman washing her hands'],
+ ['👨🚿','he','Man showering'],
+ ['👩💤','she','Woman sleeping'],
+ ['👨🚗','he','Man driving'],
+ ['👩👋','she','Woman waving'],
+ ['👨👏','he','Man clapping'],
+ ['👩🛒','she','Woman shopping'],
+ ['👨🎁🎀','he','Man wrapping a present']
 ];
 const exercises={
  pictures:{title:'Find the similar picture',trials:pictureTrials},
@@ -122,7 +186,7 @@ function renderAssess(){
    const heading=exercise==='pictures'?title:`Usually ${trial[1]}…`;
    const [icon,label]=exercise==='pictures'?trial.target:[trial[0],trial[2]];
    view.innerHTML=`<div class="prompt-block assess-prompt"><p class="eyebrow">${trialIndex+1} of ${trials.length}</p><h1 tabindex="-1">${heading}</h1></div>
-    <div class="assess-picture" role="img" aria-label="${label}">${icon}</div>`
+    <div class="assess-picture${exercise==='actions'?' assess-action-picture':''}" role="img" aria-label="${label}">${icon}</div>`
     +(exercise==='pictures'
       ?`<div class="assess-choices">${trial.choices.map(([picture,name],i)=>`<button class="option-card" aria-label="${name}" data-match="${i}">${picture}</button>`).join('')}</div>`
       :'<button class="speak-button assess-next" data-action="assess-next">Next</button>');

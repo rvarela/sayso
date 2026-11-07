@@ -33,6 +33,12 @@
   gap: 8px;
 }
 
+.assess-action-picture {
+  width: min(100%, 340px);
+  padding: 8px;
+  font-size: clamp(40px, 14vw, 82px);
+}
+
 .assess-choices .option-card {
   justify-content: center;
   padding: 8px;
