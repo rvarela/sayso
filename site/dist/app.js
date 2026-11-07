@@ -174,10 +174,21 @@ const readingTrials=[
  'hippopotamus','ambulance','orchestra','xylophone','percussion',
  'thunderstorm','telescope','astronaut','constellation','archipelago'
 ];
+const nonsenseTrials=[
+ 'splunt','crewlf','egular','crattle','writy',
+ 'sprown','anty','trunch','sluch','fonnier',
+ 'plist','prench','larden','granc','anitol',
+ 'lerman','adiul','splac','truggle','enavra',
+ 'anaphit','clampft','stirple','drindle','flinter',
+ 'glisp','shramble','twemish','plodden','scraffle',
+ 'brintle','frask','thindle','veltrum','snorvish',
+ 'whindle','drelvish','crumpleth','grastle','meltrane'
+];
 const exercises={
  pictures:{title:'Find the similar picture',trials:pictureTrials},
  actions:{title:'Finish the sentence',trials:actionTrials},
- reading:{title:'Read aloud',trials:readingTrials}
+ reading:{title:'Read aloud',trials:readingTrials,words:true},
+ nonsense:{title:'Nonsense words',trials:nonsenseTrials,words:true}
 };
 let exercise=null, trialIndex=0, matches=0;
 
@@ -188,13 +199,13 @@ function renderAssess(){
    +Object.entries(exercises).map(([id,{title}])=>`<button class="option-card" data-exercise="${id}"><span class="option-text">${title}</span><span class="option-arrow" aria-hidden="true">›</span></button>`).join('')
    +'</div><p>Informal exercises. Use your own clinical judgement when interpreting responses.</p>';
  }else{
-  const {title,trials}=exercises[exercise];
+  const {title,trials,words}=exercises[exercise];
   const trial=trials[trialIndex];
   if(!trial){
    const summary=exercise==='pictures'?`${matches} of ${trials.length} matched the expected picture.`
-    :exercise==='reading'?'All 40 words shown.':'All action pictures shown.';
+    :words?`All ${trials.length} words shown.`:'All action pictures shown.';
    view.innerHTML=`<div class="prompt-block"><h1 tabindex="-1">Exercise complete</h1><p>${summary}</p></div><button class="secondary-button" data-action="assess-menu">Back to exercises</button>`;
-  }else if(exercise==='reading'){
+  }else if(words){
    view.innerHTML=`<div class="prompt-block assess-prompt"><p class="eyebrow">${trialIndex+1} of ${trials.length}</p><h1 tabindex="-1">${trial}</h1></div>
     <button class="speak-button assess-next" data-action="assess-next">Next</button>`;
   }else{
