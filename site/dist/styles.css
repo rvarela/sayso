@@ -16,8 +16,7 @@
 
 .quick-row {
   position: relative;
-  overflow: hidden;
-  border-radius: 19px;
+  isolation: isolate;
   touch-action: pan-y;
 }
 
@@ -28,7 +27,7 @@
 }
 
 .quick-row.revealed .option-card {
-  transform: translateX(-120px);
+  transform: translateX(-114px);
 }
 
 .quick-more, .quick-remove {
@@ -46,16 +45,21 @@
   border-radius: 12px;
   color: var(--ink);
   background: var(--paper);
+  transition: right .18s ease;
 }
 
 .quick-row.revealed .quick-more {
-  right: 126px;
+  right: 120px;
 }
 
 .quick-remove {
   visibility: hidden;
-  inset: 0 0 0 auto;
-  width: 120px;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+  width: 104px;
+  min-height: 44px;
+  border-radius: 12px;
   background: #873c33;
   color: white;
 }
@@ -65,7 +69,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .quick-row .option-card { transition: none; }
+  .quick-row .option-card, .quick-more { transition: none; }
 }
 
 .patient-view nav [aria-pressed="true"] {
