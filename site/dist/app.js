@@ -55,7 +55,7 @@ function phrase(text){
 }
 
 function addWord(text, category, emoji){
- state.custom.push({id:String(Date.now()),text,category,emoji});
+ state.custom.push({id:String(Date.now()),text:text.toLowerCase(),category,emoji});
  localStorage.setItem('sayso-custom',JSON.stringify(state.custom));
 }
 
@@ -352,6 +352,6 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)r
   localStorage.setItem('sayso-favourites',JSON.stringify(favourites));
   return render();
  }
- const a=b.dataset.action;if(a==='settings')showSettings(true);if(a==='close-settings')showSettings(false);if(a==='home'){state.node='root';state.trail=[];render()}if(a==='undo'){const last=state.trail.pop();state.node=last?.node||'root';render()}if(a==='clear'){state.node='root';state.trail=[];render()}if(a==='speak-sentence')speak(state.trail.map(x=>x.text).join(' '));if(a==='preview-voice')speak('Hello. This is the voice I will use to help you communicate.');if(a==='add-custom'){const input=$('#customLabel'),text=input.value.trim();if(!text)return $('#formStatus').textContent='Please enter a word or phrase.';state.custom.push({id:String(Date.now()),text,category:$('#categorySelect').value});localStorage.setItem('sayso-custom',JSON.stringify(state.custom));input.value='';$('#formStatus').textContent=`Added “${text}”.`;renderCustom()}if(a==='reset-learning'){state.usage={};localStorage.removeItem('sayso-usage');b.textContent='Reset ✓';setTimeout(()=>b.textContent='Reset',1200)}});
+ const a=b.dataset.action;if(a==='settings')showSettings(true);if(a==='close-settings')showSettings(false);if(a==='home'){state.node='root';state.trail=[];render()}if(a==='undo'){const last=state.trail.pop();state.node=last?.node||'root';render()}if(a==='clear'){state.node='root';state.trail=[];render()}if(a==='speak-sentence')speak(state.trail.map(x=>x.text).join(' '));if(a==='preview-voice')speak('Hello. This is the voice I will use to help you communicate.');if(a==='add-custom'){const input=$('#customLabel'),text=input.value.trim().toLowerCase();if(!text)return $('#formStatus').textContent='Please enter a word or phrase.';addWord(text,$('#categorySelect').value);input.value='';$('#formStatus').textContent=`Added “${text}”.`;renderCustom()}if(a==='reset-learning'){state.usage={};localStorage.removeItem('sayso-usage');b.textContent='Reset ✓';setTimeout(()=>b.textContent='Reset',1200)}});
 if('speechSynthesis'in window){speechSynthesis.addEventListener('voiceschanged',loadVoices);loadVoices()}
 render();
