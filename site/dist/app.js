@@ -59,11 +59,15 @@ function addWord(text, category, emoji){
  localStorage.setItem('sayso-custom',JSON.stringify(state.custom));
 }
 
+function showMode(mode){
+ for(const [name,view] of [['builder','#builderView'],['quick','#quickView'],['assess','#assessView']]){
+  $(view).classList.toggle('hidden',name!==mode);
+  $(`[data-action="${name}"]`).setAttribute('aria-pressed',name===mode);
+ }
+}
+
 function showQuick(show){
- $('#builderView').classList.toggle('hidden',show);
- $('#quickView').classList.toggle('hidden',!show);
- $('[data-action="builder"]').setAttribute('aria-pressed',!show);
- $('[data-action="quick"]').setAttribute('aria-pressed',show);
+ showMode(show?'quick':'builder');
  const entries=allQuick();
  quickOrder=[...new Set([...quickOrder,...entries.keys()])].filter(i=>i>=0&&i<entries.length);
  $('#quickView').innerHTML=quickOrder.map(i=>{
@@ -76,6 +80,55 @@ function showQuick(show){
   return `<div class="quick-row"><button class="quick-remove" data-remove-quick="${i}">${label}</button>${card}<button class="quick-more" aria-label="Actions for ${escapeHtml(text)}" aria-expanded="false">⋯</button></div>`;
  }).join('')
   + '<button class="option-card" data-action="add-quick"><span class="option-text">Add another</span><span class="option-arrow add-plus" aria-hidden="true">+</span></button>';
+}
+
+const pictureTrials=[
+ {target:['🚗','Car'],choices:[['✈️','Plane'],['🚌','Bus'],['🚲','Bicycle']],answer:1},
+ {target:['🐈','Cat'],choices:[['🐕','Dog'],['🪑','Chair'],['🍌','Banana']],answer:0},
+ {target:['🍎','Apple'],choices:[['👟','Shoe'],['🔑','Key'],['🍐','Pear']],answer:2},
+ {target:['👕','Shirt'],choices:[['🧦','Sock'],['🚂','Train'],['🍇','Grapes']],answer:0},
+ {target:['🥄','Spoon'],choices:[['🎸','Guitar'],['🍴','Fork'],['🏠','House']],answer:1},
+ {target:['🦆','Duck'],choices:[['📚','Books'],['🧤','Glove'],['🐓','Rooster']],answer:2}
+];
+const actionTrials=[
+ ['🏊‍♀️','she','Woman swimming'],
+ ['🏃‍♂️','he','Man running'],
+ ['🚴‍♀️','she','Woman cycling'],
+ ['🤹‍♂️','he','Man juggling'],
+ ['💃','she','Woman dancing'],
+ ['🧗‍♂️','he','Man climbing'],
+ ['🏄‍♀️','she','Woman surfing'],
+ ['🏋️‍♂️','he','Man lifting weights']
+];
+const exercises={
+ pictures:{title:'Find the similar picture',trials:pictureTrials},
+ actions:{title:'Finish the sentence',trials:actionTrials}
+};
+let exercise=null, trialIndex=0, matches=0;
+
+function renderAssess(){
+ const view=$('#assessView');
+ if(!exercise){
+  view.innerHTML='<div class="prompt-block"><h1 tabindex="-1">Assess</h1><p>Therapist-led picture exercises.</p></div><div class="option-list">'
+   +Object.entries(exercises).map(([id,{title}])=>`<button class="option-card" data-exercise="${id}"><span class="option-text">${title}</span><span class="option-arrow" aria-hidden="true">›</span></button>`).join('')
+   +'</div><p>Informal exercises. Use your own clinical judgement when interpreting responses.</p>';
+ }else{
+  const {title,trials}=exercises[exercise];
+  const trial=trials[trialIndex];
+  if(!trial){
+   const summary=exercise==='pictures'?`${matches} of ${trials.length} matched the expected picture.`:'All action pictures shown.';
+   view.innerHTML=`<div class="prompt-block"><h1 tabindex="-1">Exercise complete</h1><p>${summary}</p></div><button class="secondary-button" data-action="assess-menu">Back to exercises</button>`;
+  }else{
+   const heading=exercise==='pictures'?title:`Usually ${trial[1]}…`;
+   const [icon,label]=exercise==='pictures'?trial.target:[trial[0],trial[2]];
+   view.innerHTML=`<div class="prompt-block assess-prompt"><p class="eyebrow">${trialIndex+1} of ${trials.length}</p><h1 tabindex="-1">${heading}</h1></div>
+    <div class="assess-picture" role="img" aria-label="${label}">${icon}</div>`
+    +(exercise==='pictures'
+      ?`<div class="assess-choices">${trial.choices.map(([picture,name],i)=>`<button class="option-card" aria-label="${name}" data-match="${i}">${picture}</button>`).join('')}</div>`
+      :'<button class="speak-button assess-next" data-action="assess-next">Next</button>');
+  }
+ }
+ view.querySelector('h1').focus({preventScroll:true});
 }
 
 function revealQuickAction(row, open){
@@ -269,6 +322,20 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)r
  }
  if(b.dataset.action==='cancel-word')return $('#wordDialog').close();
  if(b.dataset.action==='quick'||b.dataset.action==='builder')return showQuick(b.dataset.action==='quick');
+ if(b.dataset.action==='assess'){showMode('assess');return renderAssess();}
+ if(b.dataset.exercise){
+  exercise=b.dataset.exercise;
+  trialIndex=0;
+  matches=0;
+  return renderAssess();
+ }
+ if(b.dataset.action==='assess-menu'){exercise=null;return renderAssess();}
+ if(b.dataset.match!=null){
+  if(Number(b.dataset.match)===pictureTrials[trialIndex].answer)matches++;
+  trialIndex++;
+  return renderAssess();
+ }
+ if(b.dataset.action==='assess-next'){trialIndex++;return renderAssess();}
  if(b.dataset.action==='speak-sentence')return speak(message());
  if(b.dataset.action==='home'||b.dataset.action==='clear'||b.dataset.action==='undo')state.newThought=false;
  if(b.dataset.action==='home')showQuick(false);

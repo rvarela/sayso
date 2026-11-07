@@ -8,6 +8,41 @@
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
 .patient-view nav {
   margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.assess-prompt {
+  text-align: center;
+}
+
+.assess-picture {
+  display: grid;
+  place-items: center;
+  width: min(100%, 220px);
+  min-height: 160px;
+  margin: 0 auto 24px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--paper);
+  font-size: clamp(72px, 22vw, 110px);
+}
+
+.assess-choices {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.assess-choices .option-card {
+  justify-content: center;
+  padding: 8px;
+  font-size: clamp(32px, 12vw, 58px);
+}
+
+.assess-next {
+  display: block;
+  min-height: 48px;
+  margin: 0 auto;
 }
 
 #quickView {
